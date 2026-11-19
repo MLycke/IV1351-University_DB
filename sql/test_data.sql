@@ -1,173 +1,124 @@
 
-BEGIN;
+CREATE TABLE course_layout (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    course_code VARCHAR(500) UNIQUE NOT NULL,
+    course_name VARCHAR(500) NOT NULL,
+    min_students INT NOT NULL,
+    max_students INT NOT NULL,
+    hp NUMERIC(4,1) NOT NULL,
+    CONSTRAINT PK_course_layout PRIMARY KEY (id)
+);
 
--- 1. Course layouts
-INSERT INTO course_layout
-    (course_code, course_name, min_students, max_students, hp)
-VALUES
-    ('DB101', 'Introduction to Databases', 10, 40, 7.5),
-    ('DB102', 'Database Design', 10, 35, 7.5),
-    ('DB201', 'Advanced Database Systems', 8, 30, 7.5);
 
--- 2. Departments
-INSERT INTO department (manager, department_name)
-VALUES
-    ('Alex Morgan', 'Computer Science'),
-    ('Sam Taylor', 'Information Systems');
+CREATE TABLE department (
+    manager VARCHAR(500) NOT NULL,
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    department_name VARCHAR(500) UNIQUE NOT NULL,
+    CONSTRAINT PK_department PRIMARY KEY (manager, id)
+);
 
--- 3. Job titles
-INSERT INTO job_title (job_title)
-VALUES
-    ('Lecturer'),
-    ('Senior Lecturer'),
-    ('Teaching Assistant');
 
--- 4. Persons
-INSERT INTO person
-    (personal_number, first_name, last_name, phone_number, address)
-VALUES
-    ('199001010001', 'Jamie', 'Andersson', '0701234567', 'Stockholm'),
-    ('198505050002', 'Robin', 'Berg', '0702345678', 'Uppsala'),
-    ('199203030003', 'Taylor', 'Lind', '0703456789', 'Stockholm'),
-    ('199507070004', 'Casey', 'Nilsson', '0704567890', 'Solna');
+CREATE TABLE job_title (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    job_title VARCHAR(500) UNIQUE NOT NULL,
+    CONSTRAINT PK_job_title PRIMARY KEY (id)
+);
 
--- 5. Teaching activities
-INSERT INTO teaching_activity (activity_name, factor)
-VALUES
-    ('Lecture', 1.50),
-    ('Seminar', 1.00),
-    ('Laboratory', 1.25),
-    ('Examination', 1.00);
 
--- 6. Course instances
-INSERT INTO course_instance
-    (instance_id, num_students, study_period, study_year, course_layout_id)
-SELECT
-    'DB101-2026-P1', 35, 1, 2026, id
-FROM course_layout WHERE course_code = 'DB101';
+CREATE TABLE person (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    personal_number VARCHAR(12) UNIQUE NOT NULL,
+    first_name VARCHAR(500) NOT NULL,
+    last_name VARCHAR(500) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    address VARCHAR(500),
+    CONSTRAINT PK_person PRIMARY KEY (id)
+);
 
-INSERT INTO course_instance
-    (instance_id, num_students, study_period, study_year, course_layout_id)
-SELECT
-    'DB102-2026-P1', 30, 1, 2026, id
-FROM course_layout WHERE course_code = 'DB102';
 
-INSERT INTO course_instance
-    (instance_id, num_students, study_period, study_year, course_layout_id)
-SELECT
-    'DB201-2026-P1', 25, 1, 2026, id
-FROM course_layout WHERE course_code = 'DB201';
+CREATE TABLE teaching_activity (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    activity_name VARCHAR(500) UNIQUE NOT NULL,
+    factor NUMERIC(5,2) NOT NULL,
+    CONSTRAINT PK_teaching_activity PRIMARY KEY (id)
+);
 
-INSERT INTO course_instance
-    (instance_id, num_students, study_period, study_year, course_layout_id)
-SELECT
-    'DB101-2026-P2', 32, 2, 2026, id
-FROM course_layout WHERE course_code = 'DB101';
 
--- 7. Employees
-INSERT INTO employee
-    (employment_id, skill_set, salary, person_id,
-     job_title_id, department_id, manager)
-VALUES
-    ('EMP001', 'Databases, SQL', 42000.00,
-     (SELECT id FROM person WHERE personal_number = '199001010001'),
-     (SELECT id FROM job_title WHERE job_title = 'Senior Lecturer'),
-     (SELECT id FROM department
-      WHERE department_name = 'Computer Science' AND manager = 'Alex Morgan'),
-     'Alex Morgan'),
+CREATE TABLE course_instance (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    instance_id VARCHAR(500) UNIQUE NOT NULL,
+    num_students INT NOT NULL,
+    study_period INT NOT NULL,
+    study_year INT NOT NULL,
+    course_layout_id INT NOT NULL,
+    CONSTRAINT PK_course_instance PRIMARY KEY (id)
+);
 
-    ('EMP002', 'Database design, teaching', 39000.00,
-     (SELECT id FROM person WHERE personal_number = '198505050002'),
-     (SELECT id FROM job_title WHERE job_title = 'Lecturer'),
-     (SELECT id FROM department
-      WHERE department_name = 'Computer Science' AND manager = 'Alex Morgan'),
-     'Alex Morgan'),
 
-    ('EMP003', 'Programming, laboratory work', 32000.00,
-     (SELECT id FROM person WHERE personal_number = '199203030003'),
-     (SELECT id FROM job_title WHERE job_title = 'Teaching Assistant'),
-     (SELECT id FROM department
-      WHERE department_name = 'Information Systems' AND manager = 'Sam Taylor'),
-     'Sam Taylor'),
+CREATE TABLE employee (
+    id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
+    employment_id VARCHAR(500) UNIQUE NOT NULL,
+    skill_set VARCHAR(500),
+    salary NUMERIC(10,2) NOT NULL,
+    person_id INT NOT NULL,
+    job_title_id INT NOT NULL,
+    department_id INT NOT NULL,
+    manager VARCHAR(500) NOT NULL,
+    CONSTRAINT PK_employee PRIMARY KEY (id)
+);
 
-    ('EMP004', 'Examination, SQL', 41000.00,
-     (SELECT id FROM person WHERE personal_number = '199507070004'),
-     (SELECT id FROM job_title WHERE job_title = 'Lecturer'),
-     (SELECT id FROM department
-      WHERE department_name = 'Information Systems' AND manager = 'Sam Taylor'),
-     'Sam Taylor');
 
--- 8. Planned activities
-INSERT INTO planned_activity
-    (course_instance_id, teaching_activity_id, planned_hours)
-VALUES
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 10.0),
+CREATE TABLE planned_activity (
+    course_instance_id INT NOT NULL,
+    teaching_activity_id INT NOT NULL,
+    planned_hours NUMERIC(6,1) NOT NULL,
+    CONSTRAINT PK_planned_activity PRIMARY KEY (course_instance_id, teaching_activity_id)
+);
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 5.0),
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB102-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 12.0),
+CREATE TABLE employee_planned_activity (
+    employee_id INT NOT NULL,
+    course_instance_id INT NOT NULL,
+    teaching_activity_id INT NOT NULL,
+    allocated_hours NUMERIC(6,1) NOT NULL,
+    CONSTRAINT PK_employee_planned_activity PRIMARY KEY (employee_id, course_instance_id, teaching_activity_id)
+);
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB102-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 6.0),
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 8.0),
+-- Foreign keys
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Laboratory'), 10.0),
+ALTER TABLE course_instance
+ADD CONSTRAINT FK_course_instance_0
+FOREIGN KEY (course_layout_id) REFERENCES course_layout (id);
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Examination'), 6.0),
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P2'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 9.0),
+ALTER TABLE employee
+ADD CONSTRAINT FK_employee_0
+FOREIGN KEY (person_id) REFERENCES person (id);
 
-    ((SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P2'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 4.0);
+ALTER TABLE employee
+ADD CONSTRAINT FK_employee_1
+FOREIGN KEY (job_title_id) REFERENCES job_title (id);
 
--- 9. Employee allocations
-INSERT INTO employee_planned_activity
-    (employee_id, course_instance_id, teaching_activity_id, allocated_hours)
-VALUES
-    -- EMP001: allocated to four course instances in study period 1
-    ((SELECT id FROM employee WHERE employment_id = 'EMP001'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 6.0),
+ALTER TABLE employee
+ADD CONSTRAINT FK_employee_2
+FOREIGN KEY (manager, department_id) REFERENCES department (manager, id);
 
-    ((SELECT id FROM employee WHERE employment_id = 'EMP001'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB102-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 7.0),
 
-    ((SELECT id FROM employee WHERE employment_id = 'EMP001'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 5.0),
+ALTER TABLE planned_activity
+ADD CONSTRAINT FK_planned_activity_0
+FOREIGN KEY (course_instance_id) REFERENCES course_instance (id);
 
-    ((SELECT id FROM employee WHERE employment_id = 'EMP001'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P2'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Lecture'), 5.0),
+ALTER TABLE planned_activity
+ADD CONSTRAINT FK_planned_activity_1
+FOREIGN KEY (teaching_activity_id) REFERENCES teaching_activity (id);
 
-    -- Other employee allocations
-    ((SELECT id FROM employee WHERE employment_id = 'EMP002'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 3.0),
 
-    ((SELECT id FROM employee WHERE employment_id = 'EMP002'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB102-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 4.0),
+ALTER TABLE employee_planned_activity
+ADD CONSTRAINT FK_employee_planned_activity_0
+FOREIGN KEY (employee_id) REFERENCES employee (id);
 
-    ((SELECT id FROM employee WHERE employment_id = 'EMP003'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Laboratory'), 8.0),
-
-    ((SELECT id FROM employee WHERE employment_id = 'EMP004'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB201-2026-P1'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Examination'), 4.0),
-
-    ((SELECT id FROM employee WHERE employment_id = 'EMP002'),
-     (SELECT id FROM course_instance WHERE instance_id = 'DB101-2026-P2'),
-     (SELECT id FROM teaching_activity WHERE activity_name = 'Seminar'), 2.0);
-
-COMMIT;
+ALTER TABLE employee_planned_activity
+ADD CONSTRAINT FK_employee_planned_activity_1
+FOREIGN KEY (course_instance_id, teaching_activity_id)
+REFERENCES planned_activity (course_instance_id, teaching_activity_id);
