@@ -1,0 +1,16 @@
+# Environment variables and credentials
+.env
+.env.*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor settings
+.vscode/
+.idea/
+
+# PostgreSQL backup files
+*.dump
+*.backup
